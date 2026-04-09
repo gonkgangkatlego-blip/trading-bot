@@ -9,7 +9,7 @@ CHAT_ID = os.environ.get("CHAT_ID")
 
 @app.route("/")
 def home():
-    return {"status": "ok"}, 200
+    return {"status": "ok"}
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
