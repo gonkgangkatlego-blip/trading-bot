@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import requests
 import os
 
@@ -7,21 +7,22 @@ app = Flask(__name__)
 TOKEN = os.environ.get("TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
-
-# ✅ HEALTH CHECK (VERY IMPORTANT FOR RAILWAY)
+# ✅ HEALTH CHECK (CRITICAL)
 @app.route("/")
 def home():
-    return "ok", 200
+    return "OK", 200
+
+
 # ✅ WEBHOOK
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)  # 👈 IMPORTANT FIX
 
         if not data:
-            return {"error": "No data"}, 400
+            return "no data", 200
 
-        # 🔹 TELEGRAM MESSAGE (commands like /start)
+        # TELEGRAM MESSAGE
         if "message" in data:
             chat_id = data["message"]["chat"]["id"]
             text = data["message"].get("text", "")
@@ -33,7 +34,7 @@ def webhook():
             else:
                 reply = text
 
-        # 🔹 TRADINGVIEW SIGNAL
+        # TRADINGVIEW SIGNAL
         else:
             chat_id = CHAT_ID
 
@@ -41,19 +42,17 @@ def webhook():
             action = data.get("action", "No action")
             price = data.get("price", "N/A")
 
-            reply = f"🚨 SIGNAL\n\n📊 {symbol}\n📌 Action: {action}\n💰 Price: {price}"
+            reply = f"🚨 SIGNAL\n\n📊 {symbol}\n📈 Action: {action}\n💰 Price: {price}"
 
-        # 🔹 SEND TO TELEGRAM
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-        payload = {
+
+        requests.post(url, json={
             "chat_id": chat_id,
             "text": reply
-        }
+        })
 
-        requests.post(url, json=payload)
-
-        return "OK"
+        return "ok", 200
 
     except Exception as e:
         print("ERROR:", str(e))
-        return {"error": str(e)}, 500
+        return "error", 200
