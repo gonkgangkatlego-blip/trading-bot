@@ -1,23 +1,21 @@
 from flask import Flask, request
 import requests
+import os
 
 app = Flask(__name__)
 
-# 🔐 YOUR TELEGRAM DETAILS
-TOKEN = "8643871843:AAHednAqzBYqEmKMz3J2HJk81z0v5B9Zj8E"
-CHAT_ID = "5517363052"
+# ENV VARIABLES (Railway)
+TOKEN = os.environ.get("TOKEN")
+CHAT_ID = os.environ.get("CHAT_ID")
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        # ✅ Works with TradingView (text/plain)
         message = request.data.decode("utf-8")
-
         if not message:
             message = "No message received"
-
-    except Exception:
-        message = "Error reading message"
+    except Exception as e:
+        message = f"Error reading message: {str(e)}"
 
     print("Received:", message)
 
@@ -27,11 +25,15 @@ def webhook():
         "text": message
     }
 
-    # ✅ SEND + DEBUG
-    response = requests.post(url, json=payload)
-    print("Telegram response:", response.text)
+    try:
+        response = requests.post(url, json=payload)
+        print("Telegram response:", response.text)
+    except Exception as e:
+        print("Telegram error:", str(e))
 
     return "ok"
 
+
 if __name__ == "__main__":
-    app.run(port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
