@@ -49,7 +49,7 @@ def tradingview_webhook():
         if not data:
             data = json.loads(request.data)
 
-        symbol = data.get("symbol", "Unknown")
+        symbol = data.get("symbol" "Unknown")
         action = data.get("action", "Signal")
         price = data.get("price", "")
 
