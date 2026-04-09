@@ -21,7 +21,7 @@ def webhook():
         if not data:
             return {"error": "No data"}, 400
 
-        text = str(data)
+        text = data.get("message", {}).get("text", "No text")
 
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {
