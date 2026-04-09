@@ -2,7 +2,7 @@ from flask import Flask, request
 import requests
 import os
 
-app = Flask(name)
+app = Flask(__name__)
 
 # ENV VARIABLES (Railway)
 TOKEN = os.environ.get("TOKEN")
