@@ -4,7 +4,6 @@ import os
 
 app = Flask(__name__)
 
-# ENV VARIABLES (Railway)
 TOKEN = os.environ.get("TOKEN")
 
 @app.route("/")
@@ -19,21 +18,28 @@ def webhook():
         if not data:
             return {"error": "No data"}, 400
 
-        # 🔥 GET CHAT ID DYNAMICALLY
-        chat_id = data.get("message", {}).get("chat", {}).get("id")
+        # 👇 Detect TradingView signal OR Telegram message
+        if "message" in data:
+            # TELEGRAM MESSAGE
+            chat_id = data["message"]["chat"]["id"]
+            text = data["message"].get("text", "")
 
-        # 🔥 GET USER MESSAGE
-        text = data.get("message", {}).get("text", "")
+            if text == "/start":
+                reply = "👋 Welcome to Katlego AI Bot!\n\nWaiting for signals..."
+            elif text == "/status":
+                reply = "🟢 Bot is running 🚀"
+            else:
+                reply = text
 
-        # COMMANDS
-        if text == "/start":
-            reply = "👋 Welcome to Katlego AI Bot!\n\nSend a message or wait for trading signals."
-        elif text == "/help":
-            reply = "📖 Commands:\n/start - Start bot\n/help - Show help\n/status - Bot status"
-        elif text == "/status":
-            reply = "🟢 Bot is running and connected 🚀"
         else:
-            reply = text  # echo
+            # 🔥 TRADINGVIEW SIGNAL
+            chat_id = os.environ.get("CHAT_ID")
+
+            symbol = data.get("symbol", "Unknown")
+            action = data.get("action", "No action")
+            price = data.get("price", "N/A")
+
+            reply = f"🚨 SIGNAL\n\n📊 {symbol}\n📈 Action: {action}\n💰 Price: {price}"
 
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {
