@@ -10,31 +10,33 @@ CHAT_ID = os.environ.get("CHAT_ID")
 
 @app.route("/")
 def home():
-    return "Bot is running!"
+    return {"status": "ok"}, 200
+
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_data(as_text=True)
+        data = request.get_json()
 
         if not data:
-            data = "No message received"
+            return {"error": "No data"}, 400
 
-        print("Received:", data)
+        text = str(data)
 
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
         payload = {
             "chat_id": CHAT_ID,
-            "text": data
+            "text": text
         }
 
-        response = requests.post(url, json=payload)
-        print("Telegram response:", response.text)
+        requests.post(url, json=payload)
+
+        return {"ok": True}, 200
 
     except Exception as e:
         print("ERROR:", str(e))
+        return {"error": str(e)}, 500
 
-    return "ok"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
