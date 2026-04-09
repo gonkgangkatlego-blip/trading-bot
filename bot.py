@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 import os
 
@@ -11,7 +11,7 @@ CHAT_ID = os.environ.get("CHAT_ID")
 # ✅ HEALTH CHECK (VERY IMPORTANT FOR RAILWAY)
 @app.route("/")
 def home():
-    return "OK"
+    return jsonify({"status": "running"})
 
 
 # ✅ WEBHOOK
