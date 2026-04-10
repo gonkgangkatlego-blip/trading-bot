@@ -25,7 +25,7 @@ def webhook():
 
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {
-            "chat_id": CHAT_ID,
+            "chat_id": "5517363052",
             "text": message
         }
 
