@@ -4,53 +4,62 @@ import os
 
 app = Flask(__name__)
 
-TOKEN = os.environ.get("TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-@app.route("/")
-def home():
-    return "OK"
-
-@app.route("/webhook", methods=["POST"])
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    try:
-        raw = request.data.decode("utf-8")
-        print("Incoming:", raw)
+    data = request.json
 
-        symbol = "Unknown"
-        action = "None"
-        price = "N/A"
+    symbol = data.get("symbol")
+    action = data.get("action")
+    price = float(data.get("price"))
 
-        # Parse TradingView plain text
-        if raw:
-            for item in raw.split(","):
-                if "=" in item:
-                    key, value = item.split("=", 1)
-                    key = key.strip()
-                    value = value.strip()
+    # === SETTINGS (YOU CAN CHANGE LATER) ===
+    SL_POINTS = 50
+    TP_POINTS = 100
 
-                    if key == "symbol":
-                        symbol = value
-                    elif key == "action":
-                        action = value
-                    elif key == "price":
-                        price = value
+    # === CALCULATIONS ===
+    if action == "BUY":
+        entry = price
+        sl = price - SL_POINTS
+        tp = price + TP_POINTS
 
-        message = f"Signal:\\n{symbol}\\n{action}\\n{price}"
+    elif action == "SELL":
+        entry = price
+        sl = price + SL_POINTS
+        tp = price - TP_POINTS
 
-        # Send to Telegram (SAFE — will NOT crash)
-        try:
-            url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-            response = requests.post(url, json={
-                "chat_id": CHAT_ID,
-                "text": message
-            })
-            print("Telegram response:", response.text)
-        except Exception as tg_error:
-            print("Telegram ERROR:", tg_error)
+    else:
+        return "Invalid action", 400
 
-        return "OK", 200
+    # === MESSAGE FORMAT ===
+    message = f"""
+🚨 SIGNAL
 
-    except Exception as e:
-        print("WEBHOOK ERROR:", e)
-        return "OK", 200   # IMPORTANT: never crash server
+Pair: {symbol}
+Type: {action}
+
+Entry: {entry}
+SL: {sl}
+TP: {tp}
+"""
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message
+    }
+
+    requests.post(url, json=payload)
+
+    return "ok", 200
+
+
+@app.route('/')
+def home():
+    return "Bot is running"
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)
