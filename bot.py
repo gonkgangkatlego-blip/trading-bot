@@ -21,7 +21,7 @@ def webhook():
         action = data.get("action", "N/A")
         entry = data.get("entry", data.get("price", "N/A"))
 
-        message = f"Signal:\n{symbol}\n{action}\n{entry}"
+        message= f"📊 {symbol}\n📉 {action}\n💰 Entry: {entry}"
 
         url = "https://api.telegram.org/bot8621509303:AAENHSD8uaEum2pBWfmG6sc4h9aB3MWy750/sendMessage"
         payload = {
