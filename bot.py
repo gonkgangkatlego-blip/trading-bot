@@ -23,9 +23,9 @@ def webhook():
 
         message = f"Signal:\n{symbol}\n{action}\n{entry}"
 
-        url = "https://api.telegram.org/bot{8621509303:AAENHSD8uaEum2pBWfmG6sc4h9aB3MWy750}/sendMessage"
+        url = "https://api.telegram.org/bot8621509303:AAENHSD8uaEum2pBWfmG6sc4h9aB3MWy750/sendMessage"
         payload = {
-            "chat_id": "5517363052",
+            "chat_id": 5517363052,
             "text": message
         }
 
