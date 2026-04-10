@@ -14,22 +14,40 @@ def home():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
-        data = request.get_json(force=True)
+        # Try JSON first
+        data = request.get_json(silent=True)
 
-        print("Incoming data:", data)
+        if data:
+            print("JSON data received:", data)
+            symbol = data.get("symbol", "Unknown")
+            action = data.get("action", "None")
+            price = data.get("price", "N/A")
 
-        symbol = data.get("symbol", "Unknown")
-        action = data.get("action", "None")
-        price = data.get("price", "N/A")
+        else:
+            # Handle plain text (TradingView fallback)
+            raw = request.data.decode("utf-8")
+            print("Raw data received:", raw)
+
+            parts = {}
+            for item in raw.split(","):
+                if "=" in item:
+                    key, value = item.split("=", 1)
+                    parts[key.strip()] = value.strip()
+
+            symbol = parts.get("symbol", "Unknown")
+            action = parts.get("action", "None")
+            price = parts.get("price", "N/A")
 
         message = f"Signal:\n{symbol}\n{action}\n{price}"
 
         url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-        requests.post(url, json={
+        response = requests.post(url, json={
             "chat_id": CHAT_ID,
             "text": message
         })
+
+        print("Telegram response:", response.text)
 
         return "OK", 200
 
