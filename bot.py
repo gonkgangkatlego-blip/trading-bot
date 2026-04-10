@@ -15,35 +15,42 @@ def home():
 def webhook():
     try:
         raw = request.data.decode("utf-8")
+        print("Incoming:", raw)
 
         symbol = "Unknown"
         action = "None"
         price = "N/A"
 
-        for item in raw.split(","):
-            if "=" in item:
-                key, value = item.split("=", 1)
-                key = key.strip()
-                value = value.strip()
+        # Parse TradingView plain text
+        if raw:
+            for item in raw.split(","):
+                if "=" in item:
+                    key, value = item.split("=", 1)
+                    key = key.strip()
+                    value = value.strip()
 
-                if key == "symbol":
-                    symbol = value
-                elif key == "action":
-                    action = value
-                elif key == "price":
-                    price = value
+                    if key == "symbol":
+                        symbol = value
+                    elif key == "action":
+                        action = value
+                    elif key == "price":
+                        price = value
 
-        message = f"Signal:\n{symbol}\n{action}\n{price}"
+        message = f"Signal:\\n{symbol}\\n{action}\\n{price}"
 
-        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
-        requests.post(url, json={
-            "chat_id": CHAT_ID,
-            "text": message
-        })
+        # Send to Telegram (SAFE — will NOT crash)
+        try:
+            url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+            response = requests.post(url, json={
+                "chat_id": CHAT_ID,
+                "text": message
+            })
+            print("Telegram response:", response.text)
+        except Exception as tg_error:
+            print("Telegram ERROR:", tg_error)
 
         return "OK", 200
 
     except Exception as e:
-        print("ERROR:", e)
-        return "Error", 500
+        print("WEBHOOK ERROR:", e)
+        return "OK", 200   # IMPORTANT: never crash server
